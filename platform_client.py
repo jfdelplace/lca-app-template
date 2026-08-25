@@ -77,9 +77,9 @@ _STATUS_FALLBACKS = {
 }
 
 
-def _get(path: str) -> dict:
+def _get(path: str, **extra_query) -> dict:
     base, token, version = _config()
-    query = {}
+    query = {k: v for k, v in extra_query.items() if v is not None and v != ""}
     if version:
         # Pinning is opt-in. Unset means "latest", which is what you normally want.
         query["version"] = version
@@ -138,3 +138,32 @@ def load() -> Dataset:
         vehicle_parameters=vehicle_frame,
         version=factors["version"],
     )
+
+
+def impacts(size, fuel, mileage, scenario="", indicators=None, basis="per_km"):
+    """One vehicle's life-cycle impact, per component, computed by the platform's
+    published method (`/api/v1/impacts`) — not reimplemented here.
+
+    Returns `{indicator: {component: value, ..., "total": value}}`. `mileage` is required,
+    in kilometres. `indicators` is an iterable of indicator names; omit for all 16 in one
+    request. `basis` is `"per_km"` (the default, manufacturing amortised over `mileage`) or
+    `"lifetime"` (totals over the whole mileage).
+
+    If your app's own method disagrees with the platform's for some vehicles or some
+    components, compute only those components yourself from `load()`'s raw data and use
+    this for everything else — see your platform's migration notes if you're moving an
+    existing app onto the API rather than starting fresh.
+    """
+    response = _get(
+        "impacts",
+        size=size,
+        fuel=fuel,
+        scenario=scenario,
+        mileage=mileage,
+        basis=basis,
+        indicator=list(indicators) if indicators else None,
+    )
+    return {
+        entry["indicator"]: {**entry["components"], "total": entry["total"]}
+        for entry in response["results"]
+    }
