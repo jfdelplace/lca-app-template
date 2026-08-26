@@ -26,7 +26,6 @@ from dotenv import load_dotenv
 # nothing here ever takes precedence over a real environment variable.
 load_dotenv()
 
-DEFAULT_BASE_URL = "http://localhost:8000"
 TIMEOUT_SECONDS = 30
 TOKEN_HELP = "the platform's Developer page, under 'Your API keys'"
 
@@ -72,7 +71,16 @@ def _config():
             f"PLATFORM_API_TOKEN is not set. Create a token on {TOKEN_HELP}, and put it in "
             "your environment. Never commit it."
         )
-    base = os.environ.get("PLATFORM_API_URL", DEFAULT_BASE_URL).rstrip("/")
+    base = os.environ.get("PLATFORM_API_URL")
+    if not base:
+        # No silent default: a missing PLATFORM_API_URL in a deployed app must fail as
+        # loudly as a missing token, not fall back to an address that only ever makes
+        # sense on the developer's own machine.
+        raise PlatformError(
+            "PLATFORM_API_URL is not set. Locally, copy .env.example to .env and fill it "
+            "in; a deployed app gets it from the platform automatically."
+        )
+    base = base.rstrip("/")
     version = os.environ.get("PLATFORM_DATA_VERSION")
     return base, token, version
 
