@@ -17,6 +17,14 @@ from functools import lru_cache
 
 import pandas as pd
 import requests
+from dotenv import load_dotenv
+
+# Only for local runs: fills os.environ from a .env file, if one exists, without
+# overriding a variable already set. In production the platform injects
+# PLATFORM_API_TOKEN/PLATFORM_API_URL straight into the container's environment, so this
+# is a no-op there — there is no .env file in the image (.dockerignore excludes it) and
+# nothing here ever takes precedence over a real environment variable.
+load_dotenv()
 
 DEFAULT_BASE_URL = "http://localhost:8000"
 TIMEOUT_SECONDS = 30

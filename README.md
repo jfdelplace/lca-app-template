@@ -29,19 +29,22 @@ this file" becomes a one-line pull — without making your repository public to 
 2. In `app.py`, set `APP_NAME` and `APP_DESCRIPTION`, then write your analysis.
 3. Get a token from the platform: sign in, open **Developer**, section **Your API keys**,
    create one, and copy it immediately (it is shown once).
-4. Run it:
+4. Configure and run it:
 
 ```bash
 pip install -r requirements.txt
 
-export PLATFORM_API_TOKEN='the-token-you-just-copied'
-export PLATFORM_API_URL='https://your-platform-address'
+cp .env.example .env   # then edit .env: paste your token, set PLATFORM_API_URL
 
 streamlit run app.py
 ```
 
-Never commit the token. It is read from the environment for exactly that reason, and
-`.gitignore` already excludes `.env`.
+`platform_client.py` loads `.env` automatically (via `python-dotenv`) — nothing else to
+source or export. Never commit the token: `.env` is excluded by both `.gitignore` (so it
+is never pushed) and `.dockerignore` (so it is never baked into the image you build later).
+In production you don't need `.env` at all — the platform injects `PLATFORM_API_TOKEN` and
+`PLATFORM_API_URL` directly into the deployed container's environment, which is why
+`platform_client.py` reads `os.environ` rather than the file itself.
 
 ## The data
 
