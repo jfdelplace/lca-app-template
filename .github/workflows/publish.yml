@@ -44,11 +44,18 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Show the reference to give the platform
+        # GHCR requires an all-lowercase image path, and docker/metadata-action already
+        # normalizes it that way for the actual push above — but a GitHub repository name
+        # can carry uppercase letters, so reconstructing the reference here from the raw
+        # ${{ github.repository }} (as this used to) prints the wrong case whenever it
+        # does. Lowercase it the same way metadata-action does, so the line printed here
+        # always matches what was actually pushed.
         env:
           IMAGE: ghcr.io/${{ github.repository }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
+          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           echo "Give this exact line to whoever onboards the app:" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          echo "${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "${IMAGE_LOWER}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
